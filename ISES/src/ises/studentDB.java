@@ -757,7 +757,6 @@ public class studentDB extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setAutoRequestFocus(false);
         setMaximumSize(new java.awt.Dimension(1080, 720));
-        setPreferredSize(new java.awt.Dimension(1080, 720));
         setResizable(false);
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
