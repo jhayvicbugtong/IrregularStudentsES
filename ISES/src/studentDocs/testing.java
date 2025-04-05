@@ -10,11 +10,10 @@ import java.sql.*;
 
 public class testing {
     public static void main(String[] args) {
-        String pdfPath = "/Users/magnaye.rp/Movies/IM_sem_project/CICS-Proposal-Slip.pdf";
+        String pdfPath = "/Users/magnaye.rp/Movies/IM_sem_project/ProposalSlip.pdf";
         String outputPdfPath = "/Users/magnaye.rp/Movies/IM_sem_project/Filled-Proposal-Slip.pdf";
 
         try {
-            // Load the PDF document
             PDDocument document = PDDocument.load(new File(pdfPath));
             PDAcroForm form = document.getDocumentCatalog().getAcroForm();
 
@@ -29,15 +28,11 @@ public class testing {
                 System.out.println(" - " + field.getFullyQualifiedName());
             }
 
-            // Database connection
             Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3308/university_portal_db", "root", "");
             Statement stmt = conn.createStatement();
-
-            // Correct SQL query
             ResultSet rs = stmt.executeQuery("SELECT CONCAT(first_name, ' ', last_name) AS name, student_id, major FROM students WHERE student_no = 4");
 
             if (rs.next()) {
-                // Fill fields only if they exist in the form
                 setField(form, "Name", rs.getString("name"));
                 setField(form, "SR Code", rs.getString("student_id"));
                 setField(form, "Major", rs.getString("major"));
