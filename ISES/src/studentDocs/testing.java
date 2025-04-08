@@ -11,7 +11,7 @@ import java.sql.*;
 public class testing {
     public static void main(String[] args) {
         String pdfPath = "/Users/magnaye.rp/Movies/IM_sem_project/ProposalSlip.pdf";
-        String outputPdfPath = "/Users/magnaye.rp/Movies/IM_sem_project/Filled-Proposal-Slip.pdf";
+        String outputPdfPath = "/Users/magnaye.rp/Movies/IM_sem_project/bagongpdfaw.pdf";
 
         try {
             PDDocument document = PDDocument.load(new File(pdfPath));
@@ -32,10 +32,10 @@ public class testing {
             Statement stmt = conn.createStatement();
             ResultSet rs = stmt.executeQuery("SELECT CONCAT(first_name, ' ', last_name) AS name, student_id, major FROM students WHERE student_no = 4");
 
-            if (rs.next()) {
-                setField(form, "Name", rs.getString("name"));
-                setField(form, "SR Code", rs.getString("student_id"));
-                setField(form, "Major", rs.getString("major"));
+            if (1 ==1) {
+                setField(form, "NameA", "Ryan Paulo");
+                setField(form, "SemesterA", rs.getString("student_id"));
+                setField(form, "MajorA", rs.getString("major"));
                 setField(form, "Semester", "2nd Semester");
                 setField(form, "Program", "BSIT");
                 setField(form, "Section", "BSIT-2205");
