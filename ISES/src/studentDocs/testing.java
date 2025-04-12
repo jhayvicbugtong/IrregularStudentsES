@@ -7,60 +7,77 @@ import org.apache.pdfbox.pdmodel.interactive.form.PDField;
 import java.io.File;
 import java.io.IOException;
 import java.sql.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class testing {
-    public static void main(String[] args) {
-        String pdfPath = "/Users/magnaye.rp/Movies/IM_sem_project/ProposalSlip.pdf";
-        String outputPdfPath = "/Users/magnaye.rp/Movies/IM_sem_project/Filled-Proposal-Slip.pdf";
+   
+        public static PDDocument fillGradesToPdf(String stud_id) {
+        String url = "jdbc:mysql://localhost:3308/university_portal_db";
+        String username = "root";
+        String password = "";
+        String getName = "SELECT CONCAT(first_name,' ', middle_name,' ', last_name) AS full_name FROM students WHERE student_id = ?;";
+        String fullName = "";
 
-        try {
-            PDDocument document = PDDocument.load(new File(pdfPath));
-            PDAcroForm form = document.getDocumentCatalog().getAcroForm();
+        Map<String, String> grades = new HashMap<>();
+        try (Connection conn = DriverManager.getConnection(url, username, password);
+             CallableStatement stmt = conn.prepareCall("{CALL getStudentGrade(?)}");
+             PreparedStatement pstmt = conn.prepareStatement(getName)) {
 
-            if (form == null) {
-                System.out.println("❌ No AcroForm found in the PDF.");
-                document.close();
-                return;
+            stmt.setString(1, stud_id);
+            ResultSet rs = stmt.executeQuery();
+            pstmt.setString(1, stud_id);
+            ResultSet name = pstmt.executeQuery();
+
+            if(name.next()){
+                fullName = name.getString("full_name");
             }
 
-            System.out.println("✅ Found AcroForm. Fields available:");
-            for (PDField field : form.getFields()) {
-                System.out.println(" - " + field.getFullyQualifiedName());
+            while (rs.next()) {
+                String courseCode = rs.getString("course_code");
+                String grade = rs.getString("grade");
+                grades.put(courseCode, grade);
             }
-
-            Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3308/university_portal_db", "root", "");
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery("SELECT CONCAT(first_name, ' ', last_name) AS name, student_id, major FROM students WHERE student_no = 4");
-
-            if (rs.next()) {
-                setField(form, "Name", rs.getString("name"));
-                setField(form, "SR Code", rs.getString("student_id"));
-                setField(form, "Major", rs.getString("major"));
-                setField(form, "Semester", "2nd Semester");
-                setField(form, "Program", "BSIT");
-                setField(form, "Section", "BSIT-2205");
-            } else {
-                System.out.println("⚠️ No matching student record found.");
-            }
-
-            // Save the updated PDF
-            document.save(outputPdfPath);
-            document.close();
-            conn.close();
-            System.out.println("✅ PDF Form filled successfully: " + outputPdfPath);
-
-        } catch (IOException | SQLException e) {
+        } catch (SQLException e) {
             e.printStackTrace();
+            return null;
         }
+
+        PDDocument pdf;
+        try {
+            pdf = PDDocument.load(new File("/Users/magnaye.rp/Movies/IM_sem_project/BA-PROSPECTUS.pdf"));
+            PDAcroForm form = pdf.getDocumentCatalog().getAcroForm();
+
+            if (form != null) {
+                PDField namefield = form.getField("NameA");
+                PDField idfield = form.getField("Student NumberA");
+                PDField namefieldB = form.getField("NameB");
+                PDField idfieldB = form.getField("Student NumberB");
+                namefield.setValue(fullName);
+                idfield.setValue(stud_id);
+                namefieldB.setValue(fullName);
+                idfieldB.setValue(stud_id);
+
+                for (Map.Entry<String, String> entry : grades.entrySet()) {
+                    String courseCode = entry.getKey();
+                    String grade = entry.getValue();
+
+                    PDField field = form.getField(courseCode);
+                    if (field != null) {
+                        field.setValue(grade);
+                    } else {
+                        System.out.println("No field found for: " + courseCode);
+                    }
+                }
+                form.flatten();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        return pdf;
+
     }
 
-    // Helper method to set form fields safely
-    private static void setField(PDAcroForm form, String fieldName, String value) throws IOException {
-        PDField field = form.getField(fieldName);
-        if (field != null) {
-            field.setValue(value);
-        } else {
-            System.out.println("⚠️ Field not found: " + fieldName);
-        }
-    }
 }
